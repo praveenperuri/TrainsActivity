@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Sign-Up Today!</title>
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+</head>
+
+<body>
+    <div class="container">
+        <br>
+        <!-- Jumbotron -->
+        <div class="jumbotron">
+            <h1 class="text-center">Anytime is Train Time!</h1>
+        </div>
+        <div class="row">
+            <!-- Most Recent Member Panel -->
+            <div class="col-lg-12">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Train Schedule</h3>
+                    </div>
+                    <div class="panel-body" id="train-schedule">
+                        <table class="table table-striped" id="tblTrains">
+                            <thead>
+                                <tr>
+                                    <th>Train Name</th>
+                                    <th>Destination</th>
+                                    <th>Frequency (min)</th>
+                                    <th>Next Arrival</th>
+                                    <th>Minutes Away</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Add Train</h3>
+                    </div>
+                    <div class="panel-body">
+                        <!-- Sign-up Form (note the various input "types")-->
+                        <form role="form">
+                            <div class="form-group">
+                                <label for="name-input">Train Name:</label>
+                                <input class="form-control" id="name-input" type="text">
+                            </div>
+                            <div class="form-group">
+                                <label for="dest-input">Destination:</label>
+                                <input class="form-control" id="dest-input" type="text">
+                            </div>
+                            <div class="form-group">
+                                <label for="first-time-input">First Train Time (hh:mm - military time):</label>
+                                <input class="form-control" id="first-time-input" type="text">
+                            </div>
+                            <div class="form-group">
+                                <label for="freq-input">Frequency (min):</label>
+                                <input class="form-control" id="freq-input" type="number">
+                            </div>
+                            <!--               <div class="form-group">
+                <label for="comment-input">How did you hear about us?</label>
+                <textarea class="form-control" id="comment-input" rows="5"></textarea>
+              </div> -->
+                            <button class="btn btn-default" id="add-train" type="submit">Submit</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery.js"></script>
+    <!-- JavaScript -->
+    <script>
+    var list = JSON.parse(localStorage.getItem("trainlist"));
+    if (!Array.isArray(list)) {
+        list = [];
+    }
+
+    function calcNextArrival(first, freq) {
+        var currentTime = new Date();
+        var nextArrivalTime = first;
+        while (nextArrivalTime < currentTime) {
+            nextArrivalTime = new Date(nextArrivalTime.getTime() + parseInt(freq) * 60000);
+        }
+        var difference = nextArrivalTime.getTime() - currentTime.getTime(); // This will give difference in milliseconds
+        var resultInMinutes = Math.round(difference / 60000);
+        return {
+            "nextArrivalTime": nextArrivalTime,
+            "minutesAway": resultInMinutes
+        }
+    }
+
+    function formatDate(date) {
+        var d = new Date(date);
+        var hh = d.getHours();
+        var m = d.getMinutes();
+        var s = d.getSeconds();
+        var dd = "AM";
+        var h = hh;
+        if (h >= 12) {
+            h = hh - 12;
+            dd = "PM";
+        }
+        if (h == 0) {
+            h = 12;
+        }
+        m = m < 10 ? "0" + m : m;
+
+        s = s < 10 ? "0" + s : s;
+
+        /* if you want 2 digit hours:
+        h = h<10?"0"+h:h; */
+
+        var pattern = new RegExp("0?" + hh + ":" + m + ":" + s);
+
+        var replacement = h + ":" + m;
+        /* if you want to add seconds
+        replacement += ":"+s;  */
+        replacement += " " + dd;
+
+        return replacement;
+        //return date.replace(pattern, replacement);
+    }
+
+    function putOnPage() {
+
+        $('#tblTrains').children('tbody').empty();
+
+        var insideList = JSON.parse(localStorage.getItem("trainlist"));
+
+        if (!Array.isArray(insideList)) {
+            insideList = [];
+        }
+
+        // render our insideList todos to the page
+        for (var i = 0; i < insideList.length; i++) {
+            //TO DO: implement on load
+
+        }
+    }
+
+
+
+
+    // $(document).on("click", "button.delete", function() {
+    //   var trainlist = JSON.parse(localStorage.getItem("trainlist"));
+    //   var currentIndex = $(this).attr("data-index");
+
+    //   // Deletes the item marked for deletion
+    //   trainlist.splice(currentIndex, 1);
+    //   list = trainlist;
+
+    //   localStorage.setItem("trainlist", JSON.stringify(trainlist));
+
+    //   putOnPage();
+    // });
+
+    $("button[type='submit']").on("click", function(event) {
+        event.preventDefault();
+        // Setting the input value to a variable and then clearing the input
+        var tname = $("#name-input").val().trim();
+        var tdest = $("#dest-input").val().trim();
+        var tfirst = $("#first-time-input").val().trim();
+        var tfreq = $("#freq-input").val().trim();
+
+        var timeArray = tfirst.split(':');
+        var firstArrivalTime = new Date();
+        firstArrivalTime.setHours(parseInt(timeArray[0]), parseInt(timeArray[1]), 0);
+
+        var trainObj = {
+            "name": tname,
+            "destination": tdest,
+            "firstArrival": firstArrivalTime,
+            "frequency": tfreq
+        };
+
+        var nextArrival = calcNextArrival(firstArrivalTime, tfreq);
+
+        var html = "<tr><td>" + tname + "</td><td>" + tdest + "</td><td>" + tfreq + "</td><td>" + formatDate(nextArrival.nextArrivalTime) + "</td><td>" + nextArrival.minutesAway + "</td></tr>";
+
+        //Try to get tbody first with jquery children. works faster!
+        var tbody = $('#tblTrains').children('tbody');
+
+        //Then if no tbody just select your table 
+        var table = tbody.length ? tbody : $('#tblTrains');
+
+        //Add row
+        table.append(html);
+
+        $("#name-input").val('');
+        $("#dest-input").val('');
+        $("#first-time-input").val('');
+        $("#freq-input").val('');
+
+        // Adding our new todo to our local list variable and adding it to local storage
+        list.push(trainObj);
+        localStorage.setItem("trainlist", JSON.stringify(list));
+
+        //putOnPage();
+    });
+
+    //render on load
+    //putOnPage();
+    </script>
+</body>
+
+</html>
